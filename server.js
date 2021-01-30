@@ -24,20 +24,49 @@ let TODO = [
  * @param {Object} res : response
  */
 const server = http.createServer(function (req, res) {
-    if(req.method === 'GET') {
+    if (req.method === 'GET') {
         return getTodos(req, res)
+    }
+    else if (req.method === 'POST') {
+        return addTodo(req, res)
     }
 })
 
+//to get all todos
 function getTodos(req, res) {
     const req_url = url.parse(req.url);
-    if(req_url.pathname != '/todos') {
+    if (req_url.pathname != '/todos') {
         return handleError(res, 404)
-    } 
+    }
     res.setHeader('Content-Type', 'application/json;charset=utf-8')
     return res.end(JSON.stringify(TODO));
 }
 
+//to add a todo in the array
+function addTodo(req, res) {
+    const req_url = url.parse(req.url)
+    if (req_url.pathname != '/todos') {
+        return handleError(res, 404)
+    }
+    let body = '';
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
+    req.on('end', () => {
+        let parsed_body = qs.parse(body)
+        if (parsed_body.completed == "false") {
+            parsed_body.completed = false;
+        }
+        else {
+            parsed_body.completed = true;
+        }
+        TODO.push(parsed_body);
+    })
+    res.setHeader('Content-Type', 'application/json;charset=utf-8')
+    return res.end("Data added successfully.");
+}
+
+//to handle wrong routes
 function handleError(res, code) {
     res.statusCode = code
     res.end(`404 Not Found!!!`)
